@@ -19,19 +19,13 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-public class GameOnUi extends JFrame implements WindowListener, ActionListener,
-		KeyListener {
+public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 
 	private JPanel GameOnUiMainPanel;
-	private JPanel WestPanel;
 	private JPanel CenterPanel;
 	private JPanel SouthPanel;
 	private Container GameOnUiContainer;
 	private BorderLayout GameOnUiLayout;
-	private JLabel led1Status;
-	private JLabel led2Status;
-	private JLabel led3Status;
-	private JLabel led4Status;
 	private JButton StartStop;
 	private JLabel resaultRightRate;
 	private JLabel resaultQuickest;
@@ -39,45 +33,28 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener,
 	private JLabel resaultAverageTime;
 	private SerialPort serialPort;
 	private OutputStream outStream;
-	//private InputStream inStream;
-	private boolean connectedTF;
-	private boolean runningTF;
-	private int Testloops = 10;
-
+	// private InputStream inStream;
+	private Game backgroundgame;
+	private boolean RunningTF;
 
 	public GameOnUi() {
 
 		GameOnUiLayout = new BorderLayout();
 		GameOnUiMainPanel = new JPanel();
 		GameOnUiContainer = new Container();
-		WestPanel = new JPanel();
 		CenterPanel = new JPanel();
 		SouthPanel = new JPanel();
-		led1Status = new JLabel("OFF");
-		led2Status = new JLabel("OFF");
-		led3Status = new JLabel("OFF");
-		led4Status = new JLabel("OFF");
 		StartStop = new JButton("Start");
 		StartStop.addActionListener(this);
 		resaultRightRate = new JLabel("0");
 		resaultQuickest = new JLabel("0");
 		resaultSlowest = new JLabel("0");
 		resaultAverageTime = new JLabel("0");
-		connectedTF = false;
-		runningTF = false;
+		RunningTF = false;
 
 		// Components Setup:
 
 		// Sub-Panels Setup:
-		WestPanel.setLayout(new GridLayout(4, 2));
-		WestPanel.add(new JLabel(" LED1: "));
-		WestPanel.add(led1Status);
-		WestPanel.add(new JLabel(" LED2: "));
-		WestPanel.add(led2Status);
-		WestPanel.add(new JLabel(" LED3: "));
-		WestPanel.add(led3Status);
-		WestPanel.add(new JLabel(" LED4: "));
-		WestPanel.add(led4Status);
 		SouthPanel.add(StartStop);
 		CenterPanel.setLayout(new GridLayout(4, 3));
 		CenterPanel.add(new JLabel("  Accuracy:"));
@@ -95,7 +72,6 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener,
 
 		// MainPanel setup:
 		GameOnUiMainPanel.setLayout(GameOnUiLayout);
-		GameOnUiMainPanel.add(WestPanel, BorderLayout.WEST);
 		GameOnUiMainPanel.add(SouthPanel, BorderLayout.SOUTH);
 		GameOnUiMainPanel.add(CenterPanel, BorderLayout.CENTER);
 
@@ -125,14 +101,18 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener,
 					SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 			serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
 
-			/* Close Connection
-			serialPort.close();
-			System.out.println("Connection closed");
-			*/
-			
-			outStream = serialPort.getOutputStream();
-			//inStream = serialPort.getInputStream(); <- not necessary,we don't read anything.
+			/*
+			 * Close Connection serialPort.close();
+			 * System.out.println("Connection closed");
+			 */
 
+			outStream = serialPort.getOutputStream();
+			// inStream = serialPort.getInputStream(); <- not necessary,we don't
+			// read anything.
+			
+			backgroundgame = new Game(outStream);
+			this.StartStop.addKeyListener(backgroundgame);
+			
 		} catch (Exception cause) {
 			StackTraceElement elements[] = cause.getStackTrace();
 			for (int i = 0; i < elements.length; i++) {
@@ -140,111 +120,46 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener,
 						+ elements[i].getLineNumber() + ">> "
 						+ elements[i].getMethodName() + "()");
 			}
-			connectedTF = false;
 			return false;
 		}
-		connectedTF = true;
 		return true;
 	}
-	
 
-	public void sendSerial(int a, int b, int c, int d){
-		
-		String out ="a"+a+"b"+b+"c"+c+"d"+d+"#";
-		try {
-			outStream.write(out.getBytes());
-			System.out.println("out: "+out);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	public void leds(int a,int b, int c, int d){
-		
-		if(a==0){led1Status.setText("OFF");}else if(a==1){led1Status.setText("ON");}
-		else if(b==0){led2Status.setText("OFF");}else if(a==1){led2Status.setText("ON");}
-		else if(c==0){led3Status.setText("OFF");}else if(a==1){led3Status.setText("ON");}
-		else if(d==0){led4Status.setText("OFF");}else if(a==1){led4Status.setText("ON");}
-		this.repaint();
-		sendSerial(a,b,c,d);
-	}
-	
-	public void ledsBlink(long Ontime,long Offtime, int loops){
-		try{
-			for(int i =0; i<loops;i++){
-				leds(1,1,1,1);
-				Thread.sleep(Ontime);
-				leds(0,0,0,0);
-				Thread.sleep(Offtime);
-			}
-		}catch(InterruptedException e){
-			e.printStackTrace();
-		}
-	}
-	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(runningTF == false){
-			StartStop.setEnabled(false);
-			runningTF = true;
-			gameStart();
-			gameStop();
+		if (RunningTF == false) {
+			RunningTF = true;
+			gameRun();
+			this.StartStop.addActionListener(this);
 		}
+	}
+	
+	public synchronized void gameRun(){
+		Thread gameThread = new Thread(backgroundgame);
+		gameThread.setName("backgroundgameThread");
+		gameThread.start();
+		try {
+			//gameThread.setDaemon(true);
+			gameThread.join();
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		resaultRightRate.setText(Integer.toString(backgroundgame
+				.getResault_RightRate()));
+		resaultQuickest.setText(Integer.toString(backgroundgame
+				.getResault_Quickest()));
+		resaultSlowest.setText(Integer.toString(backgroundgame
+				.getResault_Slowest()));
+		resaultAverageTime.setText(Integer.toString(backgroundgame
+				.getResault_AverageTime()));
+		RunningTF = false;
 	}
 
-	
-	public void gameStart(){
-		try {
-			ledsBlink(500,500,3);
-			
-			for(int i=1;i<=Testloops;i++){
-				Thread.sleep(500);
-				int k = new Random().nextInt((4 - 1) + 1)+1;
-				System.out.println(k);
-				
-			}
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
-	
-	public void gameCalculate(){
-		
-		
-	}
-	
-	public void gameStop(){
-		gameCalculate();
-		StartStop.setEnabled(true);
-		runningTF = false;
-	}
-	
 	public void keyPressed(KeyEvent e) {
 		// TODO Auto-generated method stub
 
 	}
 
-	@Override
-	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void keyTyped(KeyEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-
-
-
-	
-	
-	
-	
 	public void windowActivated(WindowEvent e) {
 		// TODO Auto-generated method stub
 
@@ -258,9 +173,7 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener,
 
 	@Override
 	public void windowClosing(WindowEvent e) {
-		if(connectedTF == true){
-			serialPort.close();
-		}
+		serialPort.close();
 		System.exit(0);
 
 	}

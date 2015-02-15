@@ -1,7 +1,4 @@
 
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
-
 import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -25,7 +22,6 @@ public class StartConnectUi extends JFrame implements WindowListener,
 	private JTextField deviceLocation;
 	private JPanel startConnectPanel;
 	private Container startConnectContainer;
-	private SerialPort serialPort;
 	private JComboBox bandWidthList;
 	private String bandWidth[] = { "9600", "19200", "38400", "57600","115200" };
 	private int bandRate = 9600;
@@ -46,7 +42,7 @@ public class StartConnectUi extends JFrame implements WindowListener,
 		Connect.setText("Connect");
 		Connect.setEnabled(true);
 		Connect.addActionListener(this);
-		deviceLocation.setText("Windows: COMx | Linux:/dev/...");
+		deviceLocation.setText("Win: COMx | Linux: /dev/ttyxx");
 
 		startConnectPanel.setLayout(new GridLayout(4, 1, 10, 10));
 		startConnectPanel.add(programInformation);

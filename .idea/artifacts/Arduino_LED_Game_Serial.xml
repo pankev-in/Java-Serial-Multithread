@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="Arduino_LED_Game_Serial">
+    <output-path>$USER_HOME$/Desktop</output-path>
+    <root id="archive" name="Arduino_LED_Game_Serial.jar">
+      <element id="module-output" name="Arduino_Led_Game_Serial" />
+      <element id="library" level="module" name="RXTXcomm.jar" module-name="Arduino_Led_Game_Serial" />
+    </root>
+  </artifact>
+</component>
