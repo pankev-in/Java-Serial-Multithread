@@ -1,3 +1,5 @@
+package ReactionGame;
+
 /*
  * Program Name: Arduino LED Reaction Game
  * 
@@ -14,19 +16,19 @@
  * 			awurm@student.tgm.ac.at
  * */
 
-
-
 public class Start_main {
-	
+
 	public static void main(String[] args) {
-		
+
+		// Log Class, responsibel for Documenting
+		// Resaults and Output Terminal
 		GameLog log = new GameLog();
-		
+
 		// Printing out some Program informations:
 		log.write("Arduino LED Reaction Game ");
 		log.write("Autor: Alexander Wurm, Kevin Pan");
 		log.write("Last Update: 02.2015");
-		
+
 		// Starting Program:
 		new StartConnectUi(log);
 	}

@@ -1,3 +1,4 @@
+package ReactionGame;
 import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -13,12 +14,17 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 public class StartConnectUi extends JFrame implements WindowListener,
 		ActionListener, KeyListener {
 
+	/**
+	 * StartConnectUI ist responsibel for Connect UI and Passing Serial
+	 * Information (location, bandwidth) to GameOnUi Class
+	 */
+	private static final long serialVersionUID = -7269215348397080470L;
+	
 	// GUI Components:
 	private JLabel programInformation;
 	private JButton Connect;
@@ -52,9 +58,7 @@ public class StartConnectUi extends JFrame implements WindowListener,
 		Connect.setText("Connect");
 		Connect.setEnabled(true);
 		Connect.addActionListener(this);
-		deviceLocation.setText("/dev/tty.usbserial-FTGD2BW7");
-		//deviceLocation.setText("/dev/tty.usbmodemfd121");
-		//deviceLocation.setText("Win: COMx | Linux: /dev/ttyxx");
+		deviceLocation.setText("Win: COMx | Linux: /dev/ttyxx");
 		bandWidthList.addKeyListener(this);
 		deviceLocation.addKeyListener(this);
 		this.log = log;
@@ -72,7 +76,7 @@ public class StartConnectUi extends JFrame implements WindowListener,
 		startConnectContainer.add(startConnectPanel);
 		this.addWindowListener(this);
 		this.setTitle("Arduino LED Game | Connect ");
-		this.setLocation(800, 500);
+		this.setLocation(550, 300);
 		this.setSize(300, 200);
 		this.setVisible(true);
 	}
@@ -145,6 +149,7 @@ public class StartConnectUi extends JFrame implements WindowListener,
 
 	@Override
 	public void keyReleased(KeyEvent arg0) {
+		// Check the Keysource, if it is from 'Enter' Button, then:
 		if(arg0.getKeyCode()==10){
 			connect();
 		}

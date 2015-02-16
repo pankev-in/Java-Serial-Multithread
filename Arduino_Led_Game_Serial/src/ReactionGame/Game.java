@@ -1,3 +1,4 @@
+package ReactionGame;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
@@ -9,15 +10,13 @@ import javax.swing.JLabel;
 public class Game implements Runnable {
 
 	// Constants:
-	private static int Testloops = 10;
+	private static int Testloops = 25;
 
 	// Variables:
 	private int resault_RightRate;
 	private int resault_Quickest;
 	private int resault_Slowest;
 	private int resault_AverageTime;
-	private String output;
-	private boolean keyPressed;
 	private long[] resaults;
 	private int rightNumber;
 	private boolean finishedTF;
@@ -44,8 +43,6 @@ public class Game implements Runnable {
 		this.resault_Slowest = 0;
 		this.resault_AverageTime = 0;
 		this.rightNumber=0;
-		this.keyPressed = false;
-		this.output = "";
 		this.resaults = new long[Testloops];
 
 	}
@@ -57,10 +54,8 @@ public class Game implements Runnable {
 		this.resault_Slowest = 0;
 		this.resault_AverageTime = 0;
 		this.rightNumber=0;
-		this.keyPressed = false;
-		this.output = "";
 		this.resaults = new long[Testloops];
-		this.loopRound.setText(" Round: 0");
+		this.loopRound.setText("  Round: 0");
 	}
 
 	public void run() {
@@ -68,7 +63,7 @@ public class Game implements Runnable {
 			ledsBlink(500, 500, 3);
 			rightNumber = 0;
 			for (int i = 0; i < Testloops; i++) {
-				this.loopRound.setText(" Round: "+(i+1));
+				this.loopRound.setText("  Round: "+(i+1));
 				Thread.sleep(500);
 				int k = new Random().nextInt((4 - 1) + 1) + 1;
 				switch (k) {
@@ -101,22 +96,12 @@ public class Game implements Runnable {
 				int keycode = keylistener.getLastPressedKey();
 				if (keycode == (k + 48)){rightNumber++;}
 				
-				//log.writeTextArea("Pressed key:"+ keylistener.getLastPressedKey());
-				//log.writeTextArea("Time used: "+ resaults[i]);
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		sendSerial(0, 0, 0, 0);
 		calculateSpeed(resaults);
-		
-		
-		log.writeTextArea("resault_AverageTime:"+resault_AverageTime);
-		log.writeTextArea("resault_Slowest:"+resault_Slowest);
-		log.writeTextArea("resault_Quickest:"+resault_Quickest);
-		log.writeTextArea("resault_RightRate:"+resault_RightRate);
-		
-		
 		StartStop.setText("Calculate");
 	}
 

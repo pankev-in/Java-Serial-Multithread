@@ -1,3 +1,4 @@
+package ReactionGame;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 
@@ -18,10 +19,17 @@ import javax.swing.JTextArea;
 
 public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 
+	/**
+	 * GameOnUi is responsible for Game GUI and passes information to Background
+	 * Game Thread.
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	// GUI Components:
 	private JPanel GameOnUiMainPanel;
 	private JPanel CenterPanel;
 	private JPanel SouthPanel;
+	private JPanel EastPanel;
 	private Container GameOnUiContainer;
 	private BorderLayout GameOnUiLayout;
 	private JButton StartStop;
@@ -31,28 +39,29 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 	private JLabel resaultAverageTime;
 	private JLabel loopRound;
 	private JTextArea gameLogTextArea;
-	private GameLog log;
-	private JScrollPane scroll;
+	private JScrollPane scrollLogTextArea;
 
 	// SerialIO Objects:
 	private SerialPort serialPort;
 
 	// Other Variables:
-
-	private Game backgroundgame;
-	private GameKeylistener keylistener;
+	private GameLog log; //Inherit log Class from main and to Background Thread
+	private Game backgroundgame; //Background running object
+	private GameKeylistener keylistener; //GameKeylistener Class
 	private boolean RunningTF;
-	private Thread gameThread;
+	private Thread gameThread;//Background Thread
 
 	public GameOnUi() {
 
 		// Describing Components:
-		loopRound = new JLabel(" Round: 0");
+		loopRound = new JLabel("  Round: 0");
 		GameOnUiLayout = new BorderLayout();
 		GameOnUiMainPanel = new JPanel();
 		GameOnUiContainer = new Container();
 		CenterPanel = new JPanel();
 		SouthPanel = new JPanel();
+		EastPanel = new JPanel();
+		EastPanel.setSize(200, 250);
 		StartStop = new JButton("Start");
 		StartStop.addActionListener(this);
 		resaultRightRate = new JLabel("0");
@@ -64,8 +73,8 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 		gameLogTextArea.setLineWrap(true);
 		gameLogTextArea.setEditable(false);
 		gameLogTextArea.setVisible(true);
-		scroll = new JScrollPane (gameLogTextArea);
-	    scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollLogTextArea = new JScrollPane (gameLogTextArea);
+		scrollLogTextArea.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
 		// Setup Variables:
 		RunningTF = false;
@@ -73,7 +82,6 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 		StartStop.addKeyListener(keylistener);
 
 		// Sub-Panels Setup:
-		
 		SouthPanel.setLayout(new GridLayout(1,2));
 		SouthPanel.add(loopRound);
 		SouthPanel.add(StartStop);
@@ -93,9 +101,10 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 
 		// MainPanel setup:
 		GameOnUiMainPanel.setLayout(GameOnUiLayout);
-		GameOnUiMainPanel.add(scroll, BorderLayout.NORTH);
+		GameOnUiMainPanel.add(scrollLogTextArea, BorderLayout.NORTH);
 		GameOnUiMainPanel.add(SouthPanel, BorderLayout.SOUTH);
 		GameOnUiMainPanel.add(CenterPanel, BorderLayout.CENTER);
+		GameOnUiMainPanel.add(EastPanel, BorderLayout.EAST);
 
 		// Container and Window Setup:
 		GameOnUiContainer = this.getContentPane();
@@ -104,7 +113,7 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 		this.addKeyListener(keylistener);
         this.setFocusable(true);
 		this.setTitle("Arduino LED Game: Connect Arduino");
-		this.setLocation(750, 525);
+		this.setLocation(500, 300);
 		this.setSize(400, 250);
 		this.setVisible(false);
 
@@ -144,6 +153,7 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		// If Button is set to Start:
 		if(StartStop.getText()=="Start"){
 			if (RunningTF == false) {
 				StartStop.setText("Stop");
@@ -151,25 +161,48 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 				gameThread = new Thread(backgroundgame);
 				gameThread.start();
 			}
-		}else if(StartStop.getText()=="Calculate"){
+		}
+		// IF Button is set to Calculate:
+		else if(StartStop.getText()=="Calculate"){
+			
+				//Set Jbutton to Calculating:
 				StartStop.setText("Calculating");
 				StartStop.setEnabled(false);
+				
 				resaultRightRate.setText(Integer.toString(backgroundgame.getResault_RightRate()));
 				resaultQuickest.setText(Integer.toString(backgroundgame.getResault_Quickest()));
 				resaultSlowest.setText(Integer.toString(backgroundgame.getResault_Slowest()));
 				resaultAverageTime.setText(Integer.toString(backgroundgame.getResault_AverageTime()));
+				
+				log.write("Right Rate(%): "+Integer.toString(backgroundgame.getResault_RightRate()));
+				log.write("Quickest(ms): "+Integer.toString(backgroundgame.getResault_Quickest()));
+				log.write("Slowest(ms): "+Integer.toString(backgroundgame.getResault_Slowest()));
+				log.write("Average(ms):"+Integer.toString(backgroundgame.getResault_AverageTime()));
+				log.write("------------------------------");
+				
 				backgroundgame.reset();
 				StartStop.setText("Start");
 				StartStop.setEnabled(true);
 				RunningTF = false;
-		}else if(StartStop.getText()=="Stop"){
+				
+		}
+		// If button is set to Stop:
+		else if(StartStop.getText()=="Stop"){
 			if (RunningTF == true){
-				gameThread.stop();
+				
+				// Stop Thread:
+				gameThread.stop(); //<-- Sorry, But i have to use it.
+				
+				// Reseting JTextfield:
 				resaultRightRate.setText("0");
 				resaultQuickest.setText("0");
 				resaultSlowest.setText("0");
 				resaultAverageTime.setText("0");
+				
+				// Reseting Background Object
 				backgroundgame.reset();
+				
+				// Set button back to START:
 				StartStop.setText("Start");
 				StartStop.setEnabled(true);
 				RunningTF = false;

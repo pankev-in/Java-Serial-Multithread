@@ -1,9 +1,10 @@
+package ReactionGame;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
 
-import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 
@@ -15,9 +16,14 @@ public class GameLog {
 	
 	public GameLog(){
 		try {
-			out = new FileOutputStream("log_"+new Date().getTime()+".txt");
+			out = new FileOutputStream("log/log_"+new Date().getTime()+".txt");
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			new File("log").mkdir();
+			try{
+			out = new FileOutputStream("log/log_"+new Date().getTime()+".txt");
+			}catch(Exception k){
+				System.out.println("Can't create ./log dir");
+			}
 		}
 		this.textAreaSetTF = false;
 	}
@@ -33,7 +39,8 @@ public class GameLog {
 	
 	public void write(String log){
 		try {
-			out.write(log.getBytes());
+			
+			out.write(new String(log+"\n").getBytes());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -42,7 +49,7 @@ public class GameLog {
 
 	public void writeTextArea(String log){
 		try {
-			out.write(log.getBytes());
+			out.write(new String(log+"\n").getBytes());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
