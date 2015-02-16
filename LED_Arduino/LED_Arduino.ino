@@ -2,7 +2,7 @@
 const int led1 = 8;
 const int led2 = 9;
 const int led3 = 10;
-const int led4 = 11;
+const int led4 = 13;
 
 String inputString = "";              // a string to hold incoming data
 boolean stringComplete = false;       // whether the string is complete

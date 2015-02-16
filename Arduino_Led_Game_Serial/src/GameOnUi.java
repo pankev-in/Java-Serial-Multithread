@@ -7,12 +7,9 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Random;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -21,6 +18,7 @@ import javax.swing.JPanel;
 
 public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 
+	// GUI Components:
 	private JPanel GameOnUiMainPanel;
 	private JPanel CenterPanel;
 	private JPanel SouthPanel;
@@ -31,14 +29,21 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 	private JLabel resaultQuickest;
 	private JLabel resaultSlowest;
 	private JLabel resaultAverageTime;
+	private JLabel loopRound;
+
+	// SerialIO Objects:
 	private SerialPort serialPort;
-	private OutputStream outStream;
-	// private InputStream inStream;
+
+	// Other Variables:
 	private Game backgroundgame;
+	private GameKeylistener keylistener;
 	private boolean RunningTF;
+	private Thread gameThread;
 
 	public GameOnUi() {
 
+		// Describing Components:
+		loopRound = new JLabel(" Round: 0");
 		GameOnUiLayout = new BorderLayout();
 		GameOnUiMainPanel = new JPanel();
 		GameOnUiContainer = new Container();
@@ -50,11 +55,16 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 		resaultQuickest = new JLabel("0");
 		resaultSlowest = new JLabel("0");
 		resaultAverageTime = new JLabel("0");
-		RunningTF = false;
 
-		// Components Setup:
+		// Setup Variables:
+		RunningTF = false;
+		keylistener = new GameKeylistener();
+		StartStop.addKeyListener(keylistener);
 
 		// Sub-Panels Setup:
+		
+		SouthPanel.setLayout(new GridLayout(1,2));
+		SouthPanel.add(loopRound);
 		SouthPanel.add(StartStop);
 		CenterPanel.setLayout(new GridLayout(4, 3));
 		CenterPanel.add(new JLabel("  Accuracy:"));
@@ -75,10 +85,12 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 		GameOnUiMainPanel.add(SouthPanel, BorderLayout.SOUTH);
 		GameOnUiMainPanel.add(CenterPanel, BorderLayout.CENTER);
 
-		// Container Setup
+		// Container and Window Setup:
 		GameOnUiContainer = this.getContentPane();
 		GameOnUiContainer.add(GameOnUiMainPanel);
 		this.addWindowListener(this);
+		this.addKeyListener(keylistener);
+        this.setFocusable(true);
 		this.setTitle("Arduino LED Game: Connect Arduino");
 		this.setLocation(750, 525);
 		this.setSize(400, 150);
@@ -88,118 +100,99 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 
 	public boolean connectSerial(String portName, int bandRate) {
 
+		// Try to connect this Serial IO Device:
 		try {
-			// Obtain a CommPortIdentifier object for the port you want to open
+
+			// Obtain a CommPortIdentifier object for the port you want to open:
 			CommPortIdentifier portId = CommPortIdentifier
 					.getPortIdentifier(portName);
 
-			// Get the port's ownership
-			serialPort = (SerialPort) portId.open("ArduinoLEDGame", 5000);
+			// Get the port's ownership, default timeout is 5 sec:
+			serialPort = (SerialPort) portId.open("ArduinoLedGame", 5000);
 
-			// Set the parameters of the connection.
+			// Set the parameters of the connection:
 			serialPort.setSerialPortParams(bandRate, SerialPort.DATABITS_8,
 					SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 			serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
 
-			/*
-			 * Close Connection serialPort.close();
-			 * System.out.println("Connection closed");
-			 */
+			// Setup Output Stream for Background Thread:
+			backgroundgame = new Game(serialPort.getOutputStream(),keylistener,StartStop,loopRound);
 
-			outStream = serialPort.getOutputStream();
-			// inStream = serialPort.getInputStream(); <- not necessary,we don't
-			// read anything.
-			
-			backgroundgame = new Game(outStream);
-			this.StartStop.addKeyListener(backgroundgame);
-			
 		} catch (Exception cause) {
-			StackTraceElement elements[] = cause.getStackTrace();
-			for (int i = 0; i < elements.length; i++) {
-				System.err.println("  " + elements[i].getFileName() + ":"
-						+ elements[i].getLineNumber() + ">> "
-						+ elements[i].getMethodName() + "()");
-			}
+
+			// If anything goes wrong:
 			return false;
 		}
+
+		// If everything above works:
 		return true;
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (RunningTF == false) {
-			RunningTF = true;
-			gameRun();
-			this.StartStop.addActionListener(this);
+		if(StartStop.getText()=="Start"){
+			if (RunningTF == false) {
+				StartStop.setText("Stop");
+				RunningTF = true;
+				gameThread = new Thread(backgroundgame);
+				gameThread.start();
+			}
+		}else if(StartStop.getText()=="Calculate"){
+				StartStop.setText("Calculating");
+				StartStop.setEnabled(false);
+				resaultRightRate.setText(Integer.toString(backgroundgame.getResault_RightRate()));
+				resaultQuickest.setText(Integer.toString(backgroundgame.getResault_Quickest()));
+				resaultSlowest.setText(Integer.toString(backgroundgame.getResault_Slowest()));
+				resaultAverageTime.setText(Integer.toString(backgroundgame.getResault_AverageTime()));
+				backgroundgame.reset();
+				StartStop.setText("Start");
+				StartStop.setEnabled(true);
+				RunningTF = false;
+		}else if(StartStop.getText()=="Stop"){
+			if (RunningTF == true){
+				gameThread.stop();
+				resaultRightRate.setText("0");
+				resaultQuickest.setText("0");
+				resaultSlowest.setText("0");
+				resaultAverageTime.setText("0");
+				backgroundgame.reset();
+				StartStop.setText("Start");
+				StartStop.setEnabled(true);
+				RunningTF = false;
+			}
 		}
-	}
-	
-	public synchronized void gameRun(){
-		Thread gameThread = new Thread(backgroundgame);
-		gameThread.setName("backgroundgameThread");
-		gameThread.start();
-		try {
-			//gameThread.setDaemon(true);
-			gameThread.join();
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}
-		resaultRightRate.setText(Integer.toString(backgroundgame
-				.getResault_RightRate()));
-		resaultQuickest.setText(Integer.toString(backgroundgame
-				.getResault_Quickest()));
-		resaultSlowest.setText(Integer.toString(backgroundgame
-				.getResault_Slowest()));
-		resaultAverageTime.setText(Integer.toString(backgroundgame
-				.getResault_AverageTime()));
-		RunningTF = false;
-	}
-
-	public void keyPressed(KeyEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void windowActivated(WindowEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void windowClosed(WindowEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void windowClosing(WindowEvent e) {
+
+		// System Existing, Close the serial connection and exit:
 		serialPort.close();
 		System.exit(0);
+	}
 
+	@Override
+	public void windowActivated(WindowEvent e) {
+	}
+
+	@Override
+	public void windowClosed(WindowEvent e) {
 	}
 
 	@Override
 	public void windowDeactivated(WindowEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void windowDeiconified(WindowEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void windowIconified(WindowEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void windowOpened(WindowEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 }
