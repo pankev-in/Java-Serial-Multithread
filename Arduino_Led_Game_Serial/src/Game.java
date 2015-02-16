@@ -23,14 +23,16 @@ public class Game implements Runnable {
 	private boolean finishedTF;
 
 	// Objects from upper source:
+	private GameLog log;
 	private GameKeylistener keylistener;
 	private OutputStream outStream;
 	private JButton StartStop;
 	private JLabel loopRound;
 
-	public Game(OutputStream outStream, GameKeylistener keylistener, JButton StartStopFromUi,JLabel loopRound) {
+	public Game(OutputStream outStream, GameKeylistener keylistener, JButton StartStopFromUi,JLabel loopRound,GameLog log) {
 
 		// Getting objects:
+		this.log = log;
 		this.loopRound = loopRound;
 		this.keylistener = keylistener;
 		this.outStream = outStream;
@@ -99,8 +101,8 @@ public class Game implements Runnable {
 				int keycode = keylistener.getLastPressedKey();
 				if (keycode == (k + 48)){rightNumber++;}
 				
-				//System.out.println("Pressed key:"+ keylistener.getLastPressedKey());
-				//System.out.println("Time used: "+ resaults[i]);
+				//log.writeTextArea("Pressed key:"+ keylistener.getLastPressedKey());
+				//log.writeTextArea("Time used: "+ resaults[i]);
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -109,10 +111,10 @@ public class Game implements Runnable {
 		calculateSpeed(resaults);
 		
 		
-		System.out.println("resault_AverageTime:"+resault_AverageTime);
-		System.out.println("resault_Slowest:"+resault_Slowest);
-		System.out.println("resault_Quickest:"+resault_Quickest);
-		System.out.println("resault_RightRate:"+resault_RightRate);
+		log.writeTextArea("resault_AverageTime:"+resault_AverageTime);
+		log.writeTextArea("resault_Slowest:"+resault_Slowest);
+		log.writeTextArea("resault_Quickest:"+resault_Quickest);
+		log.writeTextArea("resault_RightRate:"+resault_RightRate);
 		
 		
 		StartStop.setText("Calculate");
@@ -157,7 +159,7 @@ public class Game implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Serial Output: " + out);
+		log.writeTextArea("Serial Output: " + out);
 	}
 
 	public void ledsBlink(long Ontime, long Offtime, int loops) {

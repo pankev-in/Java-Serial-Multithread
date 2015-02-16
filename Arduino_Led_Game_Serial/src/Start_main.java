@@ -20,14 +20,15 @@ public class Start_main {
 	
 	public static void main(String[] args) {
 		
-		//Printing out some Program informations:
-		System.out.println("Arduino LED Reaction Game ");
-		System.out.println("Autor: Alexander Wurm, Kevin Pan");
-		System.out.println("Last Update: 02.2015");
-		System.out.println("##############################");
+		GameLog log = new GameLog();
 		
-		//Starting Program:
-		new StartConnectUi();
+		// Printing out some Program informations:
+		log.write("Arduino LED Reaction Game ");
+		log.write("Autor: Alexander Wurm, Kevin Pan");
+		log.write("Last Update: 02.2015");
+		
+		// Starting Program:
+		new StartConnectUi(log);
 	}
 
 }

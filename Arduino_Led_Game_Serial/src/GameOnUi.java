@@ -6,15 +6,15 @@ import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.OutputStream;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 
@@ -30,11 +30,15 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 	private JLabel resaultSlowest;
 	private JLabel resaultAverageTime;
 	private JLabel loopRound;
+	private JTextArea gameLogTextArea;
+	private GameLog log;
+	private JScrollPane scroll;
 
 	// SerialIO Objects:
 	private SerialPort serialPort;
 
 	// Other Variables:
+
 	private Game backgroundgame;
 	private GameKeylistener keylistener;
 	private boolean RunningTF;
@@ -55,6 +59,13 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 		resaultQuickest = new JLabel("0");
 		resaultSlowest = new JLabel("0");
 		resaultAverageTime = new JLabel("0");
+		gameLogTextArea = new JTextArea(7,1);
+		gameLogTextArea.setSize(400, 100);
+		gameLogTextArea.setLineWrap(true);
+		gameLogTextArea.setEditable(false);
+		gameLogTextArea.setVisible(true);
+		scroll = new JScrollPane (gameLogTextArea);
+	    scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
 		// Setup Variables:
 		RunningTF = false;
@@ -82,6 +93,7 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 
 		// MainPanel setup:
 		GameOnUiMainPanel.setLayout(GameOnUiLayout);
+		GameOnUiMainPanel.add(scroll, BorderLayout.NORTH);
 		GameOnUiMainPanel.add(SouthPanel, BorderLayout.SOUTH);
 		GameOnUiMainPanel.add(CenterPanel, BorderLayout.CENTER);
 
@@ -93,12 +105,12 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
         this.setFocusable(true);
 		this.setTitle("Arduino LED Game: Connect Arduino");
 		this.setLocation(750, 525);
-		this.setSize(400, 150);
+		this.setSize(400, 250);
 		this.setVisible(false);
 
 	}
 
-	public boolean connectSerial(String portName, int bandRate) {
+	public boolean connectSerial(String portName, int bandRate,GameLog log) {
 
 		// Try to connect this Serial IO Device:
 		try {
@@ -116,7 +128,9 @@ public class GameOnUi extends JFrame implements WindowListener, ActionListener {
 			serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
 
 			// Setup Output Stream for Background Thread:
-			backgroundgame = new Game(serialPort.getOutputStream(),keylistener,StartStop,loopRound);
+			this.log = log;
+			log.SetJTextArea(gameLogTextArea);
+			backgroundgame = new Game(serialPort.getOutputStream(),keylistener,StartStop,loopRound,this.log);
 
 		} catch (Exception cause) {
 

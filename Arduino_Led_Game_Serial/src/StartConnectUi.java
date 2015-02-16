@@ -13,6 +13,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 public class StartConnectUi extends JFrame implements WindowListener,
@@ -25,16 +26,18 @@ public class StartConnectUi extends JFrame implements WindowListener,
 	private JPanel startConnectPanel;
 	private Container startConnectContainer;
 	private JComboBox bandWidthList;
+	
 
 	// Some Variabels:
 	private static String bandWidth[] = { "9600", "19200", "38400", "57600",
 			"115200" };
 	private int bandRate = 9600;
 
-	// Next GUI Window:
-	private GameOnUi gameUi = new GameOnUi();
+	// Other:
+	private GameLog log;
+	private GameOnUi gameUi;
 
-	public StartConnectUi() {
+	public StartConnectUi(GameLog log) {
 
 		// Describing Components:
 		programInformation = new JLabel();
@@ -49,11 +52,14 @@ public class StartConnectUi extends JFrame implements WindowListener,
 		Connect.setText("Connect");
 		Connect.setEnabled(true);
 		Connect.addActionListener(this);
-		deviceLocation.setText("/dev/tty.usbmodemfd121");
+		deviceLocation.setText("/dev/tty.usbserial-FTGD2BW7");
+		//deviceLocation.setText("/dev/tty.usbmodemfd121");
 		//deviceLocation.setText("Win: COMx | Linux: /dev/ttyxx");
 		bandWidthList.addKeyListener(this);
 		deviceLocation.addKeyListener(this);
-
+		this.log = log;
+		gameUi = new GameOnUi();
+		
 		// Setup JPanel Layout and adds Components:
 		startConnectPanel.setLayout(new GridLayout(4, 1, 10, 10));
 		startConnectPanel.add(programInformation);
@@ -97,17 +103,18 @@ public class StartConnectUi extends JFrame implements WindowListener,
 		}
 
 		// System Print Line: Connection information:
-		System.out.println("System Message: Trying to connect to:" + portName
+		log.write("##############################");
+		log.write("System Message: Trying to connect to:" + portName
 				+ " with " + bandRate + " Bandwidth");
 
 		// Try to connect gameUi Class with specific device location and
 		// bandwidth:
-		if (!gameUi.connectSerial(portName, bandRate)) {
+		if (!gameUi.connectSerial(portName, bandRate, this.log)) {
 
 			// If Connection fails, shows an Error Message
-			System.out.println("System Message: Fails to connect to:"
+			log.write("System Message: Fails to connect to:"
 					+ portName + " with " + bandRate + " Bandwidth");
-			System.out.println("##############################");
+			log.write("##############################");
 			JOptionPane.showMessageDialog(null,
 					"Can't connect to this device, please check again.",
 					"Connection Error", JOptionPane.ERROR_MESSAGE);
@@ -116,9 +123,9 @@ public class StartConnectUi extends JFrame implements WindowListener,
 
 			// If Connection Success, then hide this connection Ui and
 			// Change into GameUi:
-			System.out.println("System Message: Connect to:" + portName
+			log.write("System Message: Connect to:" + portName
 					+ " with " + bandRate + " Bandwidth Seccessesfully");
-			System.out.println("##############################");
+			log.write("##############################");
 			JOptionPane.showMessageDialog(null,
 					"Device Connected, have fun! :)",
 					"Connection Success", JOptionPane.INFORMATION_MESSAGE);
