@@ -141,8 +141,9 @@ public class Game implements Runnable {
 		String out = "a" + a + "b" + b + "c" + c + "d" + d + "#";
 		try {
 			outStream.write(out.getBytes());
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			System.out.println("HEY!!!!FALSCH");
+			//e.printStackTrace();
 		}
 		log.writeTextArea("Serial Output: " + out);
 	}
